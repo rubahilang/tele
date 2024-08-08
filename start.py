@@ -185,6 +185,10 @@ def is_user_in_user_js(username: str) -> bool:
 
 # Function to handle text messages for withdrawals
 async def handle_text_message(update: Update, context: CallbackContext) -> None:
+    # Check if the message is from a private chat
+    if update.message.chat.type != 'private':
+        return
+
     text = update.message.text
     username = update.message.from_user.username if update.message.from_user.username else "unknown"
 
@@ -244,16 +248,12 @@ def update_user_balance(username: str, new_balance: int) -> None:
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
-    # Command handlers
+    # Add command and message handlers
     application.add_handler(CommandHandler("start", start))
-    
-    # Button handlers
-    application.add_handler(CallbackQueryHandler(button))
-    
-    # Text message handler for withdrawal
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
-    
-    # Run the bot
+    application.add_handler(CallbackQueryHandler(button))
+
+    # Run the bot until you send a signal to stop
     application.run_polling()
 
 if __name__ == '__main__':
