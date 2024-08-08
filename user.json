@@ -1,0 +1,24 @@
+{
+    "redfoxysx": {
+        "balance": 100000,
+        "referrals": []
+    },
+    "rubahilang": {
+        "balance": 4900,
+        "referrals": []
+    },
+    "sijasminee": {
+        "balance": 12000,
+        "referrals": [
+            "sijasminee"
+        ],
+        "referred_by": "sijasminee"
+    },
+    "Wikipediatop": {
+        "balance": 12000,
+        "referrals": [
+            "Wikipediatop"
+        ],
+        "referred_by": "Wikipediatop"
+    }
+}
