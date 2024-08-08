@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
 import json
 import logging
 
@@ -56,7 +56,6 @@ async def start(update: Update, context: CallbackContext) -> None:
             
             if context.args:
                 referrer_username = context.args[0]
-                users = load_users_from_file(USER_JSON_PATH)
                 if referrer_username in users:
                     if username not in users[referrer_username].get('referrals', []):
                         users[username] = {'balance': 10000, 'referrals': [], 'referred_by': referrer_username}
@@ -72,6 +71,7 @@ async def start(update: Update, context: CallbackContext) -> None:
                             
                             await context.bot.send_message(
                                 chat_id=referrer_user_id,
+                                text=f'Selamat! {username} telah bergabung menggunakan referral Anda.'
                             )
                             
                         except Exception as e:
@@ -142,12 +142,12 @@ async def button(update: Update, context: CallbackContext) -> None:
         await query.message.reply_text(f'Jumlah referral Anda adalah {total_referrals}')
     elif query.data == 'withdraw':
         await query.message.reply_text(
-            f"!------------------------------------!\n"
+            f"!----------------------------------------------!\n"
             f'Saldo saat ini Rp. {get_user_balance(username)}\n'
             'Untuk penarikan minimal 50.000\n'
-            'Ketik Format: TARIK 50000 NO-DANA\n'
-            'Contoh: TARIK 50000 081234567890'
-            f"!-----------------------------------!\n"
+            'Ketik Format: TARIK Nominal NO-DANA\n'
+            'Contoh: TARIK 50000 081234567890\n'
+            f"!----------------------------------------------!\n"
         )
     elif query.data == 'ladang_cuan':
         await query.message.reply_text(
@@ -183,13 +183,77 @@ def is_user_in_user_js(username: str) -> bool:
     users = load_users_from_file(USER_JSON_PATH)
     return username in users
 
+# Function to handle text messages for withdrawals
+async def handle_text_message(update: Update, context: CallbackContext) -> None:
+    text = update.message.text
+    username = update.message.from_user.username if update.message.from_user.username else "unknown"
+
+    if not is_user_in_user_js(username):
+        await update.message.reply_text(f'Anda harus bergabung dengan grup ini terlebih dahulu sebelum menggunakan fitur bot: {GROUP_LINK}')
+        return
+
+    if text.startswith('TARIK'):
+        parts = text.split()
+        if len(parts) != 3:
+            await update.message.reply_text('Format penarikan salah. Gunakan format: TARIK {jumlah} {nomor_dana}')
+            return
+
+        try:
+            amount = int(parts[1])
+            dana_number = parts[2]
+        except ValueError:
+            await update.message.reply_text('Jumlah harus berupa angka.')
+            return
+
+        if amount < 50000:
+            await update.message.reply_text('Jumlah penarikan minimal adalah 50.000.')
+            return
+
+        balance = get_user_balance(username)
+
+        if amount > balance:
+            await update.message.reply_text('Saldo Anda tidak mencukupi untuk penarikan ini.')
+            return
+
+        # Format the withdrawal message
+        withdrawal_message = (
+            "!----------------------------------------------!\n"
+            "💸Penarikan Berhasil💸\n"
+            f"Username: {username}\n"
+            f"Jumlah: {amount}\n"
+            f"Nomor Dana: {dana_number}\n"
+            f"Sisa Saldo: {balance - amount}\n"
+            "Status: Pending\n"
+            "!----------------------------------------------!"
+        )
+
+        # Send the withdrawal message
+        await update.message.reply_text(withdrawal_message)
+
+        # Update the user's balance
+        update_user_balance(username, balance - amount)
+
+# Function to update user balance
+def update_user_balance(username: str, new_balance: int) -> None:
+    users = load_users_from_file(USER_JSON_PATH)
+    if username in users:
+        users[username]['balance'] = new_balance
+        save_users_to_file(USER_JSON_PATH, users)
+
 # Main function to start the bot
 def main() -> None:
     application = Application.builder().token(TOKEN).build()
 
-    application.add_handler(CommandHandler('start', start))
+    # Command handlers
+    application.add_handler(CommandHandler("start", start))
+    
+    # Button handlers
     application.add_handler(CallbackQueryHandler(button))
-
+    
+    # Text message handler for withdrawal
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
+    
+    # Run the bot
     application.run_polling()
 
 if __name__ == '__main__':
