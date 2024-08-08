@@ -136,7 +136,17 @@ async def button(update: Update, context: CallbackContext) -> None:
     elif query.data.startswith('referral_'):
         referrer_username = query.data.split('_', 1)[1]
         referral_link = f'https://t.me/CUAN_WINGAMING_BOT?start={referrer_username}'
-        await query.message.reply_text(f'Ini adalah link referral Anda: {referral_link}')
+        await query.message.reply_text(
+            f'🚀 DANA KAGET X WINGAMING77🚀\n\n'
+            f'Ini dia kesempatan emas untuk meraih cuan dengan cara yang seru dan menguntungkan! 💰✨ Bergabunglah dengan bot penghasil cuan kami dan rasakan sendiri keuntungannya!\n\n'
+            f'Daftar sekarang lewat link ini:\n'
+            f'⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️⬇️\n'
+            f'{referral_link} 🎯🔗\n'
+            f'⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️⬆️\n'
+            f'dan mulai perjalanan Anda menuju cuan yang melimpah! 🎉💸\n\n'
+            f'Jangan lewatkan peluang langka ini! 💎 Segera daftar dan buktikan sendiri betapa mudahnya menghasilkan uang. 💵🔥 Ajak teman-teman Anda juga, dan nikmati hasilnya bersama! 👯‍♂️🙌\n\n'
+            f'Kesempatan ini hanya datang sekali—ambil langkah pertama Anda sekarang juga! 🚀💥'
+        )
     elif query.data == 'total_referral':
         total_referrals = get_total_referrals(username)
         await query.message.reply_text(f'Jumlah referral Anda adalah {total_referrals}')
